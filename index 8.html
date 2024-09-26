@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #333;
+            animation: popIn 1s ease-out forwards;
+        }
+
+        #game {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .cell:hover {
+            transform: scale(1.1);
+        }
+
+        .cell.active {
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .winner {
+            color: #28a745;
+            font-size: 1.5em;
+            margin-top: 20px;
+            animation: winnerGlow 1s infinite alternate;
+        }
+
+        @keyframes winnerGlow {
+            0% {
+                text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+            }
+            100% {
+                text-shadow: 0 0 20px rgba(255, 0, 0, 1);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #restart:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tic-Tac-Toe</h1>
+    <div id="game">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+    <div class="winner hidden" id="winnerMessage"></div>
+    <button id="restart" class="hidden">Restart</button>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const winnerMessage = document.getElementById('winnerMessage');
+        const restartButton = document.getElementById('restart');
+        let currentPlayer = 'X';
+        let board = Array(9).fill(null);
+        let gameActive = true;
+
+        const winningCombinations = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        function handleCellClick(e) {
+            const cell = e.target;
+            const index = cell.getAttribute('data-index');
+
+            if (!gameActive || board[index]) return;
+
+            board[index] = currentPlayer;
+            cell.textContent = currentPlayer;
+            cell.classList.add('active');
+
+            if (checkWinner()) {
+                showWinner(currentPlayer);
+                gameActive = false;
+                return;
+            }
+
+            if (board.every(cell => cell !== null)) {
+                showDraw();
+                gameActive = false;
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+
+        function checkWinner() {
+            return winningCombinations.some(combination => {
+                return combination.every(index => board[index] === currentPlayer);
+            });
+        }
+
+        function showWinner(player) {
+            winnerMessage.textContent = `${player} Wins! 🎉`;
+            winnerMessage.classList.remove('hidden');
+            confettiEffect();
+            restartButton.classList.remove('hidden');
+        }
+
+        function showDraw() {
+            winnerMessage.textContent = `It's a Draw! 😕`;
+            winnerMessage.classList.remove('hidden');
+            restartButton.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            board.fill(null);
+            currentPlayer = 'X';
+            gameActive = true;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('active');
+            });
+            winnerMessage.classList.add('hidden');
+            restartButton.classList.add('hidden');
+        }
+
+        restartButton.addEventListener('click', restartGame);
+
+        function confettiEffect() {
+            for (let i = 0; i < 100; i++) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'absolute';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = getRandomColor();
+            confetti.style.top = Math.random() * window.innerHeight + 'px';
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.animation = 'fall 2s linear';
+            document.body.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 2000);
+        }
+
+        function getRandomColor() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+
+</body>
+</html>
